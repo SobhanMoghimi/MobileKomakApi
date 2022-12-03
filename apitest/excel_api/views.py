@@ -136,4 +136,6 @@ def process(symbol: str,
                 except:
                     token_quantity = 0
 
+                token_quantity = round(token_quantity, 2)
+                leverage = round(leverage, 2)
                 return token_quantity, leverage
