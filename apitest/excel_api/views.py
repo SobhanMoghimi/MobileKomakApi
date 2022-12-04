@@ -108,32 +108,63 @@ TODO:
     2. Make 
 """
 def process(symbol: str,
-                    order_price: float,
-                    stop_loss: float,
-                    take_profit: float,
-                    contract_type: str,
-                    signal: bool,
-                    total_position: float,
-                    initial_margin_percent: float,
-                    total_deposit: float) -> Tuple[float, float]:
-                # calculating leverage
-                try:
-                    total_loss = total_deposit * total_position
-                    coef = 1 if contract_type == 'short' else -1
-                    percent_of_loss = (order_price - stop_loss) / order_price * coef
-                    real_position_size = total_deposit * initial_margin_percent
-                    leverage = abs((total_loss / percent_of_loss) / real_position_size)
-                except:
-                    leverage = 0
+            order_price: float,
+            stop_loss: float,
+            take_profit: float,
+            contract_type: str,
+            signal: bool,
+            total_position: int,
+            initial_margin_percent: int,
+            total_deposit: float) -> Tuple[float, float]:
+    # calculating leverage
+    try:
+        total_loss = total_deposit * total_position / 100
+        coef = 1 if contract_type == 'short' else -1
+        percent_of_loss = (order_price - stop_loss) / order_price * coef
+        percent_of_profit = (order_price - take_profit) / order_price * coef
+        real_position_size = total_deposit * initial_margin_percent / 100
+        leverage = abs((total_loss / percent_of_loss) / real_position_size)
+        leveraged_percent_of_loss = percent_of_loss * leverage
+        leveraged_percent_of_profit = percent_of_profit * leverage
+        total_profit = leveraged_percent_of_profit * real_position_size
+        reward_risk = abs(total_profit / total_loss)
+        # There are two 'total loss' in csv file, are they different?
 
-                # calculating token quantity
-                try:
-                    leveraged_position_size = real_position_size * leverage
-                    print(leveraged_position_size, real_position_size)
-                    token_quantity = leveraged_position_size / order_price
-                except:
-                    token_quantity = 0
+        # take profits
+        take_profit_1 = abs(((order_price - take_profit) * coef / 5 * 1) + (coef * -1 * order_price))
+        take_profit_2 = abs(((order_price - take_profit) * coef / 5 * 2) + (coef * -1 * order_price))
+        take_profit_3 = abs(((order_price - take_profit) * coef / 5 * 3) + (coef * -1 * order_price))
+        take_profit_4 = abs(((order_price - take_profit) * coef / 5 * 4) + (coef * -1 * order_price))
+        take_profit_5 = abs(((order_price - take_profit) * coef / 5 * 5) + (coef * -1 * order_price))
 
-                token_quantity = round(token_quantity, 2)
-                leverage = round(leverage, 2)
-                return token_quantity, leverage
+        # liquidation price
+        coef_leverage = 0.005 if symbol == "BTCUSDT" else 0.01
+        liquidation_price = ((order_price * leverage) / (abs(leverage + (coef * -1) + (coef * coef_leverage * leverage))))
+
+        valid_action = True
+        if liquidation_price < stop_loss and contract_type == "short":
+            valid_action = False
+        if liquidation_price > stop_loss and contract_type != "short":
+            valid_action = False
+
+    except:
+        leverage = 0
+        percent_of_loss = 0
+        percent_of_profit = 0
+        reward_risk = 0
+        liquidation_price = 0
+        valid_action = False
+
+    # calculating token quantity
+    try:
+        leveraged_position_size = real_position_size * leverage
+        token_quantity = leveraged_position_size / order_price
+    except:
+        token_quantity = 0
+
+    return token_quantity, leverage, percent_of_loss, leveraged_percent_of_loss, \
+           percent_of_profit, leveraged_percent_of_profit, total_profit, \
+           real_position_size, leveraged_position_size, reward_risk,  take_profit_1,\
+           take_profit_2, take_profit_3, take_profit_4, take_profit_5, liquidation_price, \
+           valid_action
+
