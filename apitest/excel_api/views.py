@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from excel_api import serializers
 import requests
-from .models import excel_data, ConstantDatas
+from .models import ExcelData, ConstantDatas
 from typing import Tuple
 
 
@@ -71,7 +71,7 @@ class ExcelApiView(APIView):
                                                )
 
             # save excel data to database
-            excel_data.objects.create(
+            ExcelData.objects.create(
                 symbol=symbol,
                 order_price=order_price,
                 stop_loss=stop_loss,
@@ -93,9 +93,7 @@ class ExcelApiView(APIView):
                 'take_profit': take_profit,
                 'contract_type': contract_type,
                 'leverage': leverage,
-                'token_quantity': token_quantity,
-                'total_position': total_position,
-                'initial_margin': initial_margin,
+                'token_quantity': token_quantity
             }
             return Response(message)
         else:
