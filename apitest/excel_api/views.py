@@ -59,16 +59,16 @@ class ExcelApiView(APIView):
             total_deposit = constansObj.total_deposit
 
 
-            token_quantity, leverage = process(symbol,
-                                               order_price,
-                                               stop_loss,
-                                               take_profit,
-                                               contract_type,
-                                               signal,
-                                               total_position,
-                                               initial_margin,
-                                               total_deposit
-                                               )
+            token_quantity, leverage, valid_action, log_info = process(symbol,
+                                                                       order_price,
+                                                                       stop_loss,
+                                                                       take_profit,
+                                                                       contract_type,
+                                                                       signal,
+                                                                       total_position,
+                                                                       initial_margin,
+                                                                       total_deposit
+                                                                       )
 
             # save excel data to database
             ExcelData.objects.create(
@@ -162,9 +162,22 @@ def process(symbol: str,
     except:
         token_quantity = 0
 
-    return token_quantity, leverage, percent_of_loss, leveraged_percent_of_loss, \
-           percent_of_profit, leveraged_percent_of_profit, total_profit, \
-           real_position_size, leveraged_position_size, reward_risk,  take_profit_1,\
-           take_profit_2, take_profit_3, take_profit_4, take_profit_5, liquidation_price, \
-           valid_action
+    log_info = {
+        'percent_of_loss': percent_of_loss,
+        'leveraged_percent_of_loss': leveraged_percent_of_loss,
+        'percent_of_profit': percent_of_profit,
+        'leveraged_percent_of_profit': leveraged_percent_of_profit,
+        'total_profit': total_profit,
+        'real_position_size': real_position_size,
+        'leveraged_position_size': leveraged_position_size,
+        'reward_risk': reward_risk,
+        'take_profit_1': take_profit_1,
+        'take_profit_2': take_profit_2,
+        'take_profit_3': take_profit_3,
+        'take_profit_4': take_profit_4,
+        'take_profit_5': take_profit_5,
+        'liquidation_price': liquidation_price
+    }
+
+    return token_quantity, leverage, valid_action, log_info
 
