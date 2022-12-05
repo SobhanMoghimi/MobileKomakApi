@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from excel_api import serializers
-import requests
 from .models import ExcelData, ConstantDatas
 from typing import Tuple
 
@@ -36,9 +35,11 @@ class HelloApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
 class ExcelApiView(APIView):
     """Excel Api View"""
     serializer_class = serializers.ExcelSerializer
+
     def get(self, request, format=None):
         return Response('Soon you will see the result')
 
@@ -52,12 +53,11 @@ class ExcelApiView(APIView):
             take_profit = serializer.validated_data.get('take_profit')
             contract_type = serializer.validated_data.get('contract_type')
 
-            constansObj = ConstantDatas.objects.last()
-            signal = constansObj.signal
-            total_position = constansObj.total_position
-            initial_margin = constansObj.initial_margin
-            total_deposit = constansObj.total_deposit
-
+            constant_objects = ConstantDatas.objects.last()
+            signal = constant_objects.signal
+            total_position = constant_objects.total_position
+            initial_margin = constant_objects.initial_margin
+            total_deposit = constant_objects.total_deposit
 
             token_quantity, leverage, valid_action, log_info = process(symbol,
                                                                        order_price,
@@ -77,12 +77,32 @@ class ExcelApiView(APIView):
                 stop_loss=stop_loss,
                 take_profit=take_profit,
                 contract_type=contract_type,
+                # Constants for now
                 signal=signal,
                 total_position=total_position,
                 initial_margin=initial_margin,
                 total_deposit=total_deposit,
                 token_quantity=token_quantity,
-                leverage=leverage
+                # Calculated
+                leverage=leverage,
+                total_loss=log_info['total_loss'],
+                percent_of_loss=log_info['percent_of_loss'],
+                leveraged_percent_of_loss=log_info['leveraged_percent_of_loss'],
+                percent_of_profit=log_info['percent_of_profit'],
+                leveraged_percent_of_profit=log_info['leveraged_percent_of_profit'],
+                total_profit=log_info['total_profit'],
+                real_position_size=log_info['real_position_size'],
+                leveraged_position_size=log_info['leveraged_position_size'],
+                reward_risk=log_info['reward_risk'],
+                # Liquidation Price
+                valid_action=valid_action,
+                liquidation_price=log_info['liquidation_price'],
+                # Take Profits
+                take_profit_1=log_info['take_profit_1'],
+                take_profit_2=log_info['take_profit_2'],
+                take_profit_3=log_info['take_profit_3'],
+                take_profit_4=log_info['take_profit_4'],
+                take_profit_5=log_info['take_profit_5']
             )
 
             # Json output for Get request
@@ -93,7 +113,8 @@ class ExcelApiView(APIView):
                 'take_profit': take_profit,
                 'contract_type': contract_type,
                 'leverage': leverage,
-                'token_quantity': token_quantity
+                'token_quantity': token_quantity,
+                valid_action: valid_action
             }
             return Response(message)
         else:
@@ -118,11 +139,11 @@ def process(symbol: str,
             total_deposit: float) -> Tuple[float, float]:
     # calculating leverage
     try:
-        total_loss = total_deposit * total_position / 100
+        total_loss = total_deposit * total_position
         coef = 1 if contract_type == 'short' else -1
         percent_of_loss = (order_price - stop_loss) / order_price * coef
         percent_of_profit = (order_price - take_profit) / order_price * coef
-        real_position_size = total_deposit * initial_margin_percent / 100
+        real_position_size = total_deposit * initial_margin_percent
         leverage = abs((total_loss / percent_of_loss) / real_position_size)
         leveraged_percent_of_loss = percent_of_loss * leverage
         leveraged_percent_of_profit = percent_of_profit * leverage
@@ -147,6 +168,14 @@ def process(symbol: str,
         if liquidation_price > stop_loss and contract_type != "short":
             valid_action = False
 
+        liquidation_price = round(liquidation_price, 3)
+        leverage = round(leverage, 2)
+        total_profit = round(total_profit, 2)
+        leveraged_percent_of_loss = round(leveraged_percent_of_loss, 2)
+        leveraged_percent_of_profit = round(leveraged_percent_of_profit, 2)
+        reward_risk = round(reward_risk, 2)
+        percent_of_loss = round(percent_of_loss, 2)
+
     except:
         leverage = 0
         percent_of_loss = 0
@@ -159,6 +188,7 @@ def process(symbol: str,
     try:
         leveraged_position_size = real_position_size * leverage
         token_quantity = leveraged_position_size / order_price
+        token_quantity = round(token_quantity, 2)
     except:
         token_quantity = 0
 
@@ -176,8 +206,8 @@ def process(symbol: str,
         'take_profit_3': take_profit_3,
         'take_profit_4': take_profit_4,
         'take_profit_5': take_profit_5,
-        'liquidation_price': liquidation_price
+        'liquidation_price': liquidation_price,
+        'total_loss': total_loss
     }
 
     return token_quantity, leverage, valid_action, log_info
-

@@ -69,6 +69,8 @@ class ExcelData(models.Model):
     take_profit = models.FloatField()
     contract_type = models.CharField(max_length=10)
     # Liquidation Price : Check validity of input requests
+    valid_action = models.BooleanField(default=True)
+    liquidation_price = models.FloatField(default=0)
     # Output Data to Server
     token_quantity = models.FloatField(default=0)
     leverage = models.FloatField(default=0)
@@ -81,10 +83,12 @@ class ExcelData(models.Model):
     leveraged_percent_of_loss = models.FloatField(default=0)
     total_loss = models.IntegerField(default=0)
     percent_of_profit = models.FloatField(default=0)
+    percent_of_loss = models.FloatField(default=0)
     leveraged_percent_of_profit = models.FloatField(default=0)
     total_profit = models.IntegerField(default=0)
     real_position_size = models.IntegerField(default=0)
     leveraged_position_size = models.IntegerField(default=0)
+    reward_risk = models.FloatField(default=0)
     # Take Profits
     take_profit_1 = models.FloatField(default=0)
     take_profit_2 = models.FloatField(default=0)
