@@ -4,19 +4,32 @@ from django.http import HttpResponse
 import csv
 
 class ExcelDataAdmin(admin.ModelAdmin):
-    list_display = ('id', 'time',
-                    'valid_action',
+    list_display = ('id', 'time', 'valid_action',
                     'symbol',
-                    'total_position',
-                    'initial_margin',
-                    'total_deposit',
                     'order_price',
                     'stop_loss',
                     'take_profit',
                     'contract_type',
+                    'total_position',
+                    'initial_margin',
+                    'total_deposit',
                     'token_quantity',
                     'leverage',
-                    'liquidation_price')
+                    'liquidation_price',
+                    'leveraged_percent_of_loss',
+                    'total_loss',
+                    'percent_of_profit',
+                    'percent_of_loss',
+                    'leveraged_percent_of_profit',
+                    'total_profit',
+                    'real_position_size',
+                    'leveraged_position_size',
+                    'reward_risk',
+                    'take_profit_1',
+                    'take_profit_2',
+                    'take_profit_3',
+                    'take_profit_4',
+                    'take_profit_5')
     list_display_links = ('id', 'time', 'valid_action', 'symbol', 'total_position', 'initial_margin', 'total_deposit', 'order_price', 'stop_loss', 'take_profit', 'contract_type', 'token_quantity', 'leverage', 'liquidation_price')
     list_filter = ('time',
                    'valid_action',

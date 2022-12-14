@@ -4,7 +4,7 @@ from rest_framework import status
 from excel_api import serializers
 from .models import ExcelData, ConstantDatas
 from typing import Tuple
-
+from excel_api import bybit
 
 class HelloApiView(APIView):
     """Test API View."""
@@ -105,6 +105,12 @@ class ExcelApiView(APIView):
                 take_profit_5=log_info['take_profit_5']
             )
 
+            try:
+                current_balance = bybit.get_balance()
+            except Exception as e:
+                current_balance = 'Error'
+                print(e.with_traceback())
+
             # Json output for Get request
             message = {
                 'symbol': symbol,
@@ -114,8 +120,10 @@ class ExcelApiView(APIView):
                 'contract_type': contract_type,
                 'leverage': leverage,
                 'token_quantity': token_quantity,
-                valid_action: valid_action
+                'valid_action': valid_action,
+                'balance': current_balance
             }
+
             return Response(message)
         else:
             return Response(
@@ -182,6 +190,10 @@ def process(symbol: str,
         percent_of_profit = 0
         reward_risk = 0
         liquidation_price = 0
+        leveraged_percent_of_profit = 0
+        leveraged_percent_of_loss = 0
+        reward_risk = 0
+        percent_of_loss = 0
         valid_action = False
 
     # calculating token quantity
