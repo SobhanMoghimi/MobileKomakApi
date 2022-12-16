@@ -30,7 +30,7 @@ class ExcelDataAdmin(admin.ModelAdmin):
                     'take_profit_3',
                     'take_profit_4',
                     'take_profit_5')
-    list_display_links = ('id', 'time', 'valid_action', 'symbol', 'total_position', 'initial_margin', 'total_deposit', 'order_price', 'stop_loss', 'take_profit', 'contract_type', 'token_quantity', 'leverage', 'liquidation_price')
+    list_display_links = ('id', 'time', 'valid_action')
     list_filter = ('time',
                    'valid_action',
                    'symbol',
