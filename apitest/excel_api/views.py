@@ -49,13 +49,30 @@ class ExcelApiView(APIView):
         # request_json = JSONParser().parse(request)
 
         # print(request_json)
-        serializer = self.serializer_class(data=request.data)
+        data = request.data
+
+        if "side" in data.keys():
+            if data["side"] == "sell":
+                data["contract_type"] = "short"
+            else:
+                data["contract_type"] = "long"
+
+        if "entry" in data.keys():
+            data["order_price"] = data["entry"]
+
+        if "stop" in data.keys():
+            data["stop_loss"] = data["stop"]
+
+        if "target" in data.keys():
+            data["take_profit"] = data["target"]
+
+        serializer = self.serializer_class(data=data)
 
         if serializer.is_valid():
             symbol = serializer.validated_data.get('symbol')
-            order_price = serializer.validated_data.get('order_price')
-            stop_loss = serializer.validated_data.get('stop_loss')
-            take_profit = serializer.validated_data.get('take_profit')
+            order_price = serializer.validated_data.get('order_price')["0"]["price"]
+            stop_loss = serializer.validated_data.get('stop_loss')["0"]["price"]
+            take_profit = serializer.validated_data.get('take_profit')["0"]["price"]
             contract_type = serializer.validated_data.get('contract_type')
 
             constant_objects = ConstantDatas.objects.last()
