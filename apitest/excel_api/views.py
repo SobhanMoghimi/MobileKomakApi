@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 from rest_framework import status
 from excel_api import serializers, bybit, utils
+# from excel_api.bybit import BybitApi
 from .models import ExcelData, ConstantDatas
 import traceback
 
@@ -20,7 +21,10 @@ class HelloApiView(APIView):
             'Is mapped manually to URLs',
         ]
 
-        return Response({'message': 'Hello!', 'an_apiview': an_apiview})
+        bybit_connection = bybit.BybitApi()
+        out_balance = bybit.BybitApi().get_wallet_balance()
+
+        return Response({'message': 'Hello!', 'bybit': out_balance})
 
     def post(self, request, format=None):
         """Create a hello message with our name."""
@@ -127,7 +131,8 @@ class ExcelApiView(APIView):
             )
 
             try:
-                current_balance = bybit.get_balance()
+                bybit_connection = bybit.BybitApi()
+                current_balance = bybit_connection.get_wallet_balance()
             except Exception as e:
                 current_balance = 'Error'
                 print('Error in calling bybit balance: ', e)
